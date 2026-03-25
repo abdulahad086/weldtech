@@ -3,7 +3,7 @@ const xlsx = require('xlsx');
 
 exports.createCompany = async (req, res) => {
   try {
-    const company = await Company.insert({ name: req.body.name, createdAt: new Date() });
+    const company = await Company.create({ name: req.body.name, createdAt: new Date() });
     res.status(201).json(company);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -12,7 +12,7 @@ exports.createCompany = async (req, res) => {
 
 exports.getCompanies = async (req, res) => {
   try {
-    const companies = await Company.find({});
+    const companies = await Company.find({}).lean();
     res.json(companies);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -28,12 +28,12 @@ exports.deleteCompany = async (req, res) => {
     
     const companyId = req.params.id;
     // Remove the company
-    const numRemovedCompany = await Company.remove({ _id: companyId }, {});
+    const numRemovedCompany = await Company.deleteOne({ _id: companyId });
     // Remove all associated transactions
-    const numRemovedTransactions = await Transaction.remove({ companyId }, { multi: true });
+    const numRemovedTransactions = await Transaction.deleteMany({ companyId });
     
-    if (numRemovedCompany > 0) {
-      res.json({ success: true, msg: 'Company and associated transactions deleted', numRemovedTransactions });
+    if (numRemovedCompany.deletedCount > 0) {
+      res.json({ success: true, msg: 'Company and associated transactions deleted', numRemovedTransactions: numRemovedTransactions.deletedCount });
     } else {
       res.status(404).json({ error: 'Company not found' });
     }
@@ -45,7 +45,7 @@ exports.deleteCompany = async (req, res) => {
 exports.addTransaction = async (req, res) => {
   try {
     const { companyId, date, customerName, billNo, debit, credit } = req.body;
-    const trans = await Transaction.insert({
+    const trans = await Transaction.create({
       companyId, date, customerName, billNo, 
       debit: Number(debit) || 0, 
       credit: Number(credit) || 0, 
@@ -65,8 +65,8 @@ exports.deleteTransaction = async (req, res) => {
     }
     
     // nedb-promises remove returns the number of deleted documents
-    const numRemoved = await Transaction.remove({ _id: req.params.id }, {});
-    if (numRemoved > 0) {
+    const numRemoved = await Transaction.deleteOne({ _id: req.params.id });
+    if (numRemoved.deletedCount > 0) {
       res.json({ success: true, msg: 'Transaction deleted' });
     } else {
       res.status(404).json({ error: 'Transaction not found' });
@@ -87,7 +87,7 @@ exports.getTransactions = async (req, res) => {
       query.companyId = companyId;
     }
 
-    let transactions = await Transaction.find(query);
+    let transactions = await Transaction.find(query).lean();
     transactions.sort((a,b) => new Date(a.date) - new Date(b.date));
     
     const companyBalances = {};
@@ -102,7 +102,7 @@ exports.getTransactions = async (req, res) => {
     });
 
     if (companyId === 'all') {
-      const companies = await Company.find({});
+      const companies = await Company.find({}).lean();
       const companyMap = {};
       companies.forEach(c => {
         const idStr = c._id ? c._id.toString() : c.id;
@@ -161,7 +161,7 @@ exports.uploadExcel = async (req, res) => {
     });
 
     if (docs.length > 0) {
-      await Transaction.insert(docs);
+      await Transaction.insertMany(docs);
     }
     res.json({ msg: 'Excel uploaded!', count: docs.length });
   } catch (error) {
