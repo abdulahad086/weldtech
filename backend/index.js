@@ -28,5 +28,10 @@ app.use('/api/', limiter);
 
 app.use('/api/ledger', ledgerRoutes);
 
+// Root route for testing connection
+app.get('/', (req, res) => {
+  res.send('✅ WeldT Secure API is live and running!');
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🔒 Secure Server running on port ${PORT}`));
