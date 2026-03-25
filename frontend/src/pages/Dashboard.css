@@ -1,0 +1,160 @@
+.weld-dashboard {
+  position: relative;
+  z-index: 10;
+  color: white;
+}
+
+.weld-dashboard select,
+.weld-dashboard input,
+.weld-dashboard button {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  padding: 8px 12px;
+  transition: all 0.3s;
+}
+
+.weld-dashboard select option {
+  background: #333;
+  color: white;
+}
+
+.weld-dashboard input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.weld-dashboard button:hover,
+.weld-dashboard select:hover,
+.weld-dashboard input:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-color: white;
+}
+
+.weld-dashboard .glass-box {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.weld-dashboard table {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.weld-dashboard th,
+.weld-dashboard td {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 10px;
+  color: white;
+}
+
+.weld-dashboard th {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.weld-dashboard tr:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.galaxy-bg-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #000;
+}
+
+.weld-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.weld-title {
+  font-size: 3rem;
+  font-weight: bold;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.weld-logo {
+  height: 60px;
+  object-fit: contain;
+}
+
+@media print {
+  @page {
+    margin: 10mm;
+    size: landscape;
+  }
+  
+  html, body, #root, .weld-dashboard {
+    background: white !important;
+    color: black !important;
+    position: static !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+  }
+
+  /* Hide background elements, filters, non-essential buttons */
+  .galaxy-bg-fixed, .weld-header button, .no-print, .weld-dashboard th:last-child, .weld-dashboard td:last-child, .glass-box {
+    display: none !important;
+  }
+  
+  .weld-logo { filter: invert(1) !important; }
+  
+  /* Reset formatting perfectly for native print engine */
+  .weld-dashboard table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto !important;
+    background: transparent !important;
+    /* This next part is absolutely critical for webkit: removes clipping from graphic layers */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transform: none !important;
+  }
+  
+  .weld-dashboard thead {
+    display: table-header-group !important;
+  }
+  
+  .weld-dashboard tbody {
+    display: table-row-group !important;
+  }
+  
+  .weld-dashboard tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+    background: transparent !important;
+  }
+  
+  .weld-dashboard th, .weld-dashboard td {
+    color: black !important;
+    border: 1px solid #000 !important;
+    background: transparent !important;
+    page-break-inside: avoid !important;
+  }
+}
