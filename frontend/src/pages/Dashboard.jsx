@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-const API_URL = import.meta.env.VITE_API_URL || 'https://weldt.onrender.com';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://weldt.onrender.com');
 import * as XLSX from 'xlsx';
 import SplitText from '../components/SplitText';
 import Galaxy from '../components/Galaxy';
