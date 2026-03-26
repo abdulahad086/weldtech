@@ -1,4 +1,3 @@
-{"name":"mtm","createdAt":{"$$date":1774470510612},"_id":"5OdSTyZHqLzoZoDJ"}
 {"name":"nishat","createdAt":{"$$date":1774469899345},"_id":"DPOoI0Kqz0XwrVic"}
 {"$$indexCreated":{"fieldName":"name","unique":true,"sparse":false}}
-{"$$deleted":true,"_id":"5OdSTyZHqLzoZoDJ"}
+{"name":"Test1","createdAt":{"$$date":1774483125117},"_id":"Cwl5ez3EdmSCOLpW"}

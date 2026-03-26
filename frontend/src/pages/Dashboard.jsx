@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+const API_URL = import.meta.env.VITE_API_URL || 'https://weldt.onrender.com';
 import * as XLSX from 'xlsx';
 import SplitText from '../components/SplitText';
 import Galaxy from '../components/Galaxy';
@@ -17,13 +18,13 @@ export default function Dashboard() {
   useEffect(() => { if (selectedCompany) fetchTransactions(); }, [selectedCompany, dateRange]);
 
   const fetchCompanies = async () => {
-    const { data } = await axios.get(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}`}/api/ledger/companies`);
+    const { data } = await axios.get(`${API_URL}/api/ledger/companies`);
     setCompanies(data);
     if(data.length && !selectedCompany) setSelectedCompany(data[0]._id);
   };
 
   const fetchTransactions = async () => {
-    const { data } = await axios.get(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}`}/api/ledger/transactions?companyId=${selectedCompany}&startDate=${dateRange.start}&endDate=${dateRange.end}`);
+    const { data } = await axios.get(`${API_URL}/api/ledger/transactions?companyId=${selectedCompany}&startDate=${dateRange.start}&endDate=${dateRange.end}`);
     setTransactions(data);
   };
 
@@ -35,7 +36,7 @@ export default function Dashboard() {
     const company = companies.find(c => c._id === selectedCompany);
     const customerName = company ? company.name : '';
 
-    await axios.post(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}`}/api/ledger/transactions`, { ...formData, customerName, companyId: selectedCompany });
+    await axios.post(`${API_URL}/api/ledger/transactions`, { ...formData, customerName, companyId: selectedCompany });
     setFormData({ date: '', billNo: '', debit: '', credit: '' });
     fetchTransactions();
   };
@@ -44,7 +45,7 @@ export default function Dashboard() {
     const pwd = prompt('Data is critical. Enter admin password to delete:');
     if (!pwd) return;
     try {
-      await axios.delete(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}`}/api/ledger/transactions/${id}`, {
+      await axios.delete(`${API_URL}/api/ledger/transactions/${id}`, {
         headers: { 'x-admin-password': pwd }
       });
       fetchTransactions();
@@ -62,7 +63,7 @@ export default function Dashboard() {
     const pwd = prompt('Are you sure you want to delete this COMPANY and ALL its transactions? Enter admin password to confirm or Cancel:');
     if (!pwd) return;
     try {
-      await axios.delete(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}`}/api/ledger/companies/${selectedCompany}`, {
+      await axios.delete(`${API_URL}/api/ledger/companies/${selectedCompany}`, {
         headers: { 'x-admin-password': pwd }
       });
       setSelectedCompany('all');
@@ -83,7 +84,7 @@ export default function Dashboard() {
     const formDataObj = new FormData();
     formDataObj.append('excel', file);
     formDataObj.append('companyId', selectedCompany);
-    await axios.post(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}`}/api/ledger/transactions/upload`, formDataObj, {
+    await axios.post(`${API_URL}/api/ledger/transactions/upload`, formDataObj, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     setFile(null);
@@ -194,7 +195,14 @@ export default function Dashboard() {
         </select>
         <button onClick={() => {
            const name = prompt("Company Name:");
-           if(name) axios.post(`${import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}`}/api/ledger/companies`, {name}).then(fetchCompanies);
+           if(name) {
+             axios.post(`${API_URL}/api/ledger/companies`, {name})
+               .then(fetchCompanies)
+               .catch(err => {
+                 console.error(err);
+                 alert(err.response?.data?.error || err.message || "Error adding company");
+               });
+           }
         }}>Add Company</button>
         {selectedCompany !== 'all' && (
           <button 

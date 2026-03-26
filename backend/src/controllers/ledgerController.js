@@ -6,6 +6,9 @@ exports.createCompany = async (req, res) => {
     const company = await Company.create({ name: req.body.name, createdAt: new Date() });
     res.status(201).json(company);
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ error: 'Company with this name already exists' });
+    }
     res.status(400).json({ error: error.message });
   }
 };
