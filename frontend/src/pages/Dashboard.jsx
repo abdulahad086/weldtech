@@ -118,14 +118,12 @@ export default function Dashboard() {
       // Calculate total final balance across all companies by summing the unique latest balances
       const latestBalances = {};
       transactions.forEach(t => {
-        if (latestBalances[t.companyId] === undefined) {
-          latestBalances[t.companyId] = t.balance; // We take the first one we see (which is the latest because array is reversed)
-        }
+        latestBalances[t.companyId] = t.balance; // Array is oldest-first, so overwriting leaves the latest
       });
       const totalBalance = Object.values(latestBalances).reduce((a, b) => a + b, 0);
       return `Global Total Balance: ${totalBalance}`;
     } else {
-      const b = transactions.length > 0 ? transactions[0].balance : 0;
+      const b = transactions.length > 0 ? transactions[transactions.length - 1].balance : 0;
       return `Final Balance: ${b}`;
     }
   };

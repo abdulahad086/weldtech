@@ -126,7 +126,7 @@ exports.getTransactions = async (req, res) => {
       });
     }
 
-    res.json(dataWithBalance.reverse());
+    res.json(dataWithBalance);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
