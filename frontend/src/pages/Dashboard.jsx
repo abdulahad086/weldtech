@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://weldt.onrender.com');
 import * as XLSX from 'xlsx';
 import SplitText from '../components/SplitText';
@@ -7,6 +8,7 @@ import Galaxy from '../components/Galaxy';
 import './Dashboard.css';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [companies, setCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState('');
   const [transactions, setTransactions] = useState([]);
@@ -167,7 +169,7 @@ export default function Dashboard() {
             <button 
               onClick={() => {
                 localStorage.removeItem('isAuthenticated');
-                window.location.href = '/login';
+                navigate('/login');
               }}
               style={{
                 padding: '8px 16px',
