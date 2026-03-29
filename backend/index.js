@@ -14,14 +14,15 @@ const app = express();
 connectDB();
 
 // Security Middlewares
-app.use(helmet()); 
+app.set('trust proxy', 1); // Trust first proxy for deployment
+app.use(helmet({ crossOriginResourcePolicy: false })); // Allow cross-origin requests
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
-  max: 200, 
+  max: 5000, // Increased limit from 200 to 5000 to prevent blocking multiple standard users
   message: 'Traffic spike detected. Request blocked.'
 });
 app.use('/api/', limiter);
