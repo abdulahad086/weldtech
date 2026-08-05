@@ -30,9 +30,7 @@ exports.deleteCompany = async (req, res) => {
     }
     
     const companyId = req.params.id;
-    // Remove the company
     const numRemovedCompany = await Company.deleteOne({ _id: companyId });
-    // Remove all associated transactions
     const numRemovedTransactions = await Transaction.deleteMany({ companyId });
     
     if (numRemovedCompany.deletedCount > 0) {
@@ -47,11 +45,39 @@ exports.deleteCompany = async (req, res) => {
 
 exports.addTransaction = async (req, res) => {
   try {
-    const { companyId, date, customerName, billNo, debit, credit } = req.body;
+    const { companyId, date, customerName, itemDescription, billNo, quantity, price, debit, credit } = req.body;
+    
+    let qty = Number(quantity) || 0;
+    let prc = Number(price) || 0;
+    let gst = 0;
+    let priceWithGst = prc;
+    let subtotal = 0;
+    let taxPointOne = 0;
+    let finalAmount = Number(debit) || 0;
+
+    if (qty > 0 && prc > 0) {
+      gst = Math.round(prc * 0.18 * 100) / 100;
+      priceWithGst = Math.round((prc + gst) * 100) / 100;
+      subtotal = Math.round((qty * priceWithGst) * 100) / 100;
+      taxPointOne = Math.round((subtotal * 0.001) * 100) / 100;
+      finalAmount = Math.round((subtotal + taxPointOne) * 100) / 100;
+    }
+
     const trans = await Transaction.create({
-      companyId, date, customerName, billNo, 
-      debit: Number(debit) || 0, 
-      credit: Number(credit) || 0, 
+      companyId,
+      date,
+      customerName: customerName || '',
+      itemDescription: itemDescription || '',
+      billNo: billNo || '',
+      quantity: qty,
+      price: prc,
+      gst,
+      priceWithGst,
+      subtotal,
+      taxPointOne,
+      finalAmount,
+      debit: finalAmount,
+      credit: Number(credit) || 0,
       createdAt: new Date()
     });
     res.status(201).json(trans);
@@ -67,7 +93,6 @@ exports.deleteTransaction = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized: Invalid master password' });
     }
     
-    // nedb-promises remove returns the number of deleted documents
     const numRemoved = await Transaction.deleteOne({ _id: req.params.id });
     if (numRemoved.deletedCount > 0) {
       res.json({ success: true, msg: 'Transaction deleted' });
@@ -91,6 +116,8 @@ exports.getTransactions = async (req, res) => {
     }
 
     let transactions = await Transaction.find(query).lean();
+    
+    // Sort A -> Z (oldest first) to accurately calculate progressive balances
     transactions.sort((a,b) => new Date(a.date) - new Date(b.date));
     
     const companyBalances = {};
@@ -98,10 +125,40 @@ exports.getTransactions = async (req, res) => {
       if (!companyBalances[t.companyId]) {
         companyBalances[t.companyId] = 0;
       }
-      let d = Number(t.debit) || 0;
+
+      let qty = Number(t.quantity) || 0;
+      let prc = Number(t.price) || 0;
+      let gst = Number(t.gst);
+      let priceWithGst = Number(t.priceWithGst);
+      let subtotal = Number(t.subtotal);
+      let taxPointOne = Number(t.taxPointOne);
+      let finalAmount = Number(t.finalAmount || t.debit);
+
+      if (qty > 0 && prc > 0 && (!subtotal || !finalAmount)) {
+        gst = Math.round(prc * 0.18 * 100) / 100;
+        priceWithGst = Math.round((prc + gst) * 100) / 100;
+        subtotal = Math.round((qty * priceWithGst) * 100) / 100;
+        taxPointOne = Math.round((subtotal * 0.001) * 100) / 100;
+        finalAmount = Math.round((subtotal + taxPointOne) * 100) / 100;
+      }
+
+      let d = finalAmount || (Number(t.debit) || 0);
       let c = Number(t.credit) || 0;
       companyBalances[t.companyId] += (d - c);
-      return { ...t, balance: companyBalances[t.companyId] };
+
+      return { 
+        ...t, 
+        quantity: qty,
+        price: prc,
+        gst: gst || (prc ? Math.round(prc * 0.18 * 100)/100 : 0),
+        priceWithGst: priceWithGst || (prc ? Math.round((prc * 1.18) * 100)/100 : 0),
+        subtotal: subtotal || d,
+        taxPointOne: taxPointOne || 0,
+        finalAmount: d,
+        debit: d,
+        credit: c,
+        balance: companyBalances[t.companyId] 
+      };
     });
 
     if (companyId === 'all') {
@@ -125,6 +182,9 @@ exports.getTransactions = async (req, res) => {
         return time >= s && time <= e;
       });
     }
+
+    // Sort Z -> A (Newest date first)
+    dataWithBalance.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     res.json(dataWithBalance);
   } catch (error) {
@@ -152,13 +212,39 @@ exports.uploadExcel = async (req, res) => {
         const d = new Date(rowDate);
         parsedDate = isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
       }
+
+      let qty = Number(row.Quantity || row.quantity || row.Qty || row.qty) || 0;
+      let prc = Number(row.Price || row.price || row.UnitPrice || row.unitPrice) || 0;
+      let gst = Number(row.GST || row.gst || row['GST (18%)']) || 0;
+      let priceWithGst = Number(row.PriceWithGst || row['Price with GST'] || row.priceWithGst) || 0;
+      let subtotal = Number(row.Subtotal || row.subtotal || row['Total Subtotal'] || row.Amount || row.amount) || 0;
+      let taxPointOne = Number(row.Tax || row.tax || row['Tax (0.1%)'] || row['0.1% Tax']) || 0;
+      let finalAmount = Number(row.TotalAmount || row['Total Amount'] || row.Debit || row.debit) || 0;
+      let credit = Number(row.Credit || row.credit) || 0;
+
+      if (qty > 0 && prc > 0 && !finalAmount) {
+        gst = Math.round(prc * 0.18 * 100) / 100;
+        priceWithGst = Math.round((prc + gst) * 100) / 100;
+        subtotal = Math.round((qty * priceWithGst) * 100) / 100;
+        taxPointOne = Math.round((subtotal * 0.001) * 100) / 100;
+        finalAmount = Math.round((subtotal + taxPointOne) * 100) / 100;
+      }
+
       return {
         companyId,
         date: parsedDate,
         customerName: row.Customer || row.customerName || '',
-        billNo: row.BillNo || row.billNo || '',
-        debit: Number(row.Debit || row.debit) || 0,
-        credit: Number(row.Credit || row.credit) || 0,
+        itemDescription: row.Item || row.item || row.Description || row.description || row.Particulars || row.particulars || '',
+        billNo: row.BillNo || row.billNo || row.InvoiceNo || row['Invoice No'] || '',
+        quantity: qty,
+        price: prc,
+        gst,
+        priceWithGst,
+        subtotal,
+        taxPointOne,
+        finalAmount,
+        debit: finalAmount,
+        credit,
         createdAt: new Date()
       };
     });

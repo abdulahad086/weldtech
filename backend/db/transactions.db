@@ -4,3 +4,4 @@
 {"companyId":"DPOoI0Kqz0XwrVic","date":"2026-03-25","customerName":"nishat","billNo":"4","debit":0,"credit":20000,"createdAt":{"$$date":1774470595252},"_id":"XWv5jpINxDuTUt1f"}
 {"companyId":"DPOoI0Kqz0XwrVic","date":"2026-03-26","customerName":"nishat","billNo":"3","debit":1200,"credit":0,"createdAt":{"$$date":1774470563305},"_id":"fgXJyZRsuWGcbuSm"}
 {"companyId":"DPOoI0Kqz0XwrVic","date":"2023-01-01T00:00:00Z","customerName":"test","debit":5000,"credit":0,"createdAt":{"$$date":1774470384864},"_id":"yQySrYa1Fo2de14x"}
+{"companyId":"Cwl5ez3EdmSCOLpW","date":"2026-07-30","customerName":"","itemDescription":"FORTEX 7018 NO.10","billNo":"3124","quantity":600,"price":725,"gst":130.5,"priceWithGst":855.5,"subtotal":513300,"taxPointOne":513.3,"finalAmount":513813.3,"debit":513813.3,"credit":0,"createdAt":{"$$date":1785956066549},"_id":"an1cefeYnJuv08CR"}
